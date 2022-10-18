@@ -1,8 +1,15 @@
 ## Cookiecutter Django 
 
+目录
+- 一、[Project Generation Options](#Project_Generation_Options)
+-  二、[Getting Up and Running Locally](#Getting_Up_and_Running_Locally)
+
+
+
+
  Cookiecutter Django是一种用于快速构建django项目的项目模板。这个模板提供了一些可选项，通过一下篇章，可以了解学习如何配置这些可选项。 
 
- ### Project Generation Options
+### <span id = "Project_Generation_Options">Project Generation Options</span> 
 
  这个章节主要列出所有的cookiecutter_django模型可选项，在cookiecutter命令行界面中，可以通过配置这些可选项构建自己的项目框架。
 
@@ -71,8 +78,8 @@ https://www.pudn.com/news/62e0ba10864d5c73ac12e0f0.html
 
 `debug`:是否配置成可debug
 
-## Getting Up and Running Locally
-
+## 
+### <span id = "Getting_Up_and_Running_Locally">Getting Up and Running Locally</span> 
 ### 配置开发环境
 
 需要提前准备的环境有：
@@ -208,5 +215,5 @@ npm run dev
 
  ### Getting Up and Running Locally With Docker
 
-
+The steps below will get you up and running with a local development environment. All of these commands assume you are in the root of your generated project.
 
