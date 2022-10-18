@@ -62,7 +62,7 @@ https://www.pudn.com/news/62e0ba10864d5c73ac12e0f0.html
 
 `use_celery`:表示是否配置成使用Celery，Celery是基于Python开发的一个分布式任务队列框架，支持使用任务队列的方式在分布的机器/进程/线程上执行任务调度。比如在Django Web平台开发中，碰到一些请求执行的任务时间较长（几分钟），为了加快用户的响应时间，可以采用异步任务的方式在后台执行这些任务。这时候就需要构建django+celery框架。详见https://blog.csdn.net/zzddada/article/details/119718282
 
-<span id = "use_mailhog">`use_mailhog`</span>:是否使用MailHog，这是一个电子邮件测试工具。一般在开发过程中使用。
+<span id = "MailHog">`use_mailhog`</span>:是否使用MailHog，这是一个电子邮件测试工具。一般在开发过程中使用。
 
 `use_sentry`:是否使用sentry,sentry是一个开源的监控系统，能支持服务端与客户端的监控，还有个强大的后台错误分析、报警平台。Sentry 本身是基于 Django 开发的。
 
