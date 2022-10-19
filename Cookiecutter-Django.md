@@ -76,7 +76,8 @@ https://www.pudn.com/news/62e0ba10864d5c73ac12e0f0.html
 
 `keep_local_envs_in_vcs`:是否将项目的.envs/.local/保存到VCS虚拟环境中，一般用于对本地环境再现性有要求的项目中。`注意`：.env(s)只在启用docker或者heroku时才能使用中（ `use_docker`，`use_heroku`两个选项都配置成True）
 
-`debug`:是否配置成可debug
+<span id = "debug">`debug`</span>
+:是否配置成可debug
 
 ## 
 ### <span id = "Getting_Up_and_Running_Locally">Getting Up and Running Locally</span> 
@@ -215,5 +216,118 @@ npm run dev
 
  ### Getting Up and Running Locally With Docker
 
-The steps below will get you up and running with a local development environment. All of these commands assume you are in the root of your generated project.
+以下步骤可以让你起一个本地开发环境，所有的操作都在你刚刚搭建的项目下。
+
+#### Prerequisites
+需要提前准备的有：
+提前安装docker、
+docker组件，根据官网安装指南安装
+Pre-commit
+
+#### Build the Stack
+
+执行以下命令，执行时间可能较长
+
+```python
+docker-compose -f local.yml build
+```
+如果你想建立的是生产环境，那就把命令中的local.yml替换成production.yml。
+
+在执行git commit之前，需要先全局安装pre-commit到你的本地机器，然后执行：
+```
+$ git init
+$ pre-commit install
+```
+如果这步失败，将导致一系列CI和Linter错误，但是pre-commit可以避免这些错误。
+
+#### Run the Stack
+
+在这个步骤中，将同时开启django和postgresql，因此启动时间会比较长。但是随后的运行会很快。
+
+在项目目录下打开终端，并运行以下命令：
+
+```
+$ docker-compose -f local.yml up
+```
+
+或者也可以通过以下命令将`COMPOSE_FILE`指向`local.yml`：
+
+```
+$ export COMPOSE_FILE=local.yml
+```
+
+然后执行：
+```
+$ docker-compose up
+```
+以上命令式docker前台运行模式，
+docker后台模式运行命令是：
+```
+$ docker-compose up -d
+```
+
+#### Execute Management Commands
+
+通过docker-compose -f local.yml run --rm 命令在容器中运行脚本，如:
+
+```
+$ docker-compose -f local.yml run --rm django python manage.py migrate
+$ docker-compose -f local.yml run --rm django python manage.py createsuperuser
+```
+在这里，django是我们正在执行的命令的目标服务。
+
+#### (Optionally) Designate your Docker Development Server IP
+
+当 [DEBUG](#debug)设置成True，docker开发服务ip的合法取值在`['localhost', '127.0.0.1', '[::1]']`范围内。当你在虚拟环境中运行时是没有问题的。在docker中你可以将host开发服务ip加入`config.settings.local`的`INTERNAL_IPS` or `ALLOWED_HOSTS`变量中。
+
+#### Configuring the Environment
+以下是local.yml的节选：
+
+# ...
+
+postgres:
+  build:
+    context: .
+    dockerfile: ./compose/production/postgres/Dockerfile
+  volumes:
+    - local_postgres_data:/var/lib/postgresql/data
+    - local_postgres_data_backups:/backups
+  env_file:
+    - ./.envs/.local/.postgres
+
+# ...
+其中最终要的是`env_file:./.envs/.local/.postgres`，一般来说stack由envs/目录下的一系列环境变量控制，例如，以下是cookiecutter_django的envs/目录下的一系列环境变量：
+```
+.envs
+├── .local
+│   ├── .django
+│   └── .postgres
+└── .production
+    ├── .django
+    └── .postgres
+```
+一般来说，对于任意环境`e`下的服务`sI`,我们是在.envs/.e/.sI中配置服务`sI`所需环境变量。
+同样的，我们需要在.envs/.local/.postgres中配置postgresql所需环境变量，示范如下：
+```python
+# PostgreSQL
+# --------------------------------------
+POSTGRES_HOST=postgres
+POSTGRES_DB=<your project slug>
+POSTGRES_USER=XgOWtQtJecsAbaIyslwGvFvPawftNaqO
+POSTGRES_PASSWORD=jSljDz4whHuwO3aJIgVBrqEml5Ycbghorep4uVJ4xjDYQu0LfuTZdctj7y0YcCLu
+```
+示范中所列的环境变量。（envs）有：POSTGRES_DB, POSTGRES_USER, and POSTGRES_PASSWORD。
+
+最后一步，需要执行`merge_production_dotenvs_in_dotenv.py`将`.envs/.production/*`合并到`.env`，命令：
+```
+$ python merge_production_dotenvs_in_dotenv.py
+```
+
+执行后，将会创建.env文件，所有的生产环境都会纳入其中。
+
+### Tips & Tricks
+
+#### Activate a Docker Machine
+
+
 
