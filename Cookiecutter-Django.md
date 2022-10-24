@@ -48,7 +48,7 @@ USE_TZ = False
  
 `use_pycharm`:是否配置成可在pycharm开发的项目
 
-`use_docker`:是否配置成使用docker和docker组件
+<span id = "use_docker">`use_docker`</span>:是否配置成使用docker和docker组件
 
 `postgresql_version`:选择pg版本，可选项有：10~14
 
@@ -60,11 +60,11 @@ USE_TZ = False
 https://www.pudn.com/news/62e0ba10864d5c73ac12e0f0.html
 表示项目是否使用Uvicorn + Gunicorn.
 
-`use_celery`:表示是否配置成使用Celery，Celery是基于Python开发的一个分布式任务队列框架，支持使用任务队列的方式在分布的机器/进程/线程上执行任务调度。比如在Django Web平台开发中，碰到一些请求执行的任务时间较长（几分钟），为了加快用户的响应时间，可以采用异步任务的方式在后台执行这些任务。这时候就需要构建django+celery框架。详见https://blog.csdn.net/zzddada/article/details/119718282
+<span id = "use_celery">`use_celery`</span>:表示是否配置成使用Celery，Celery是基于Python开发的一个分布式任务队列框架，支持使用任务队列的方式在分布的机器/进程/线程上执行任务调度。比如在Django Web平台开发中，碰到一些请求执行的任务时间较长（几分钟），为了加快用户的响应时间，可以采用异步任务的方式在后台执行这些任务。这时候就需要构建django+celery框架。详见https://blog.csdn.net/zzddada/article/details/119718282
 
 <span id = "MailHog">`use_mailhog`</span>:是否使用MailHog，这是一个电子邮件测试工具。一般在开发过程中使用。
 
-`use_sentry`:是否使用sentry,sentry是一个开源的监控系统，能支持服务端与客户端的监控，还有个强大的后台错误分析、报警平台。Sentry 本身是基于 Django 开发的。
+<span id = "use_sentry">`use_sentry`</span>:是否使用sentry,sentry是一个开源的监控系统，能支持服务端与客户端的监控，还有个强大的后台错误分析、报警平台。Sentry 本身是基于 Django 开发的。
 
 `use_whitenoise`:是否使用whitenoise,Whitenoise是最棒的静态资源服务器。
 多年来，托管网站的静态资源——图片、Javascript、CSS——都是一件很痛苦的事情。Django 内建的 django.views.static.serve 视图，“在生产环境中不可靠，所以只应为开发环境的提供辅助功能。”但使用一个“真正的” Web 服务器，如 NGINX 或者借助 CDN 来托管媒体资源，配置起来会比较困难。Whitenoice 很简洁地解决了这个问题。它可以像在开发环境那样轻易地在生产环境中设置静态服务器，并且针对生产环境进行了加固和优化。
@@ -329,5 +329,66 @@ $ python merge_production_dotenvs_in_dotenv.py
 
 #### Activate a Docker Machine
 
+以下命令表示将docker环境切
+
+```
+$eval "$(docker-machine env dev1)"
+```
+#### Debugging
+ipdb
+
+IPDB（Ipython Debugger）是一款集成了Ipython的Python代码命令行调试工具，可以看做PDB的升级版。
+
+如果你使用以下命令做调试:
+
+```python
+import ipdb;
+ipdb.set_trace()
+```
+那么你要先执行这个命令，才可以正常调试。
+
+```$ docker-compose -f local.yml run --rm --service-ports django```
+
+django-debug-toolbar
+
+django-debug-toolbar 是一组可配置的面板,可显示有关当前请求/响应的各种调试信息,并在单击时显示有关面板内容的更多详细信息。
+需要将
+docker的ip地址配置到local.py中的INTERNAL_IPS，django框架内的使用和配置不再这里详述，这里仅描述框架搭建过程中的配置。
 
 
+#### Mailhog
+
+在本地开发的时候可以使用Mailhog做邮件收发的测试，前提是[use_mailhog](#MailHog)设置为y。使用步骤如下：
+
+    1、确保<project_slug>_local_mailhog 这个容器已启动； 
+
+    2、打开 http://127.0.0.1:8025测试。
+
+#### Celery tasks in local development
+
+当不使用docker的时候， Celery任务设置为Eagar模式。当使用docker的时候，任务调用器celery默认被使用。
+如果你在开发过程中有任务需要在主线程中执行，那么需要在config/settings/local.py中设置CELERY_TASK_ALWAYS_EAGER = True 。这可能是在测试，或者是使用DJDT分析的时候用到。
+
+Celery Flower
+
+flower是基于web的监控和管理Celery的工具,和任务队列是隔离的,flower的运行并不会影响到任务队列的真正执行。
+
+cookiecutter_django框架中使用celery flower的前提是:
+[use_docker](#use_docker) 在项目初始化时被设置为y;同时要求[use_celery](#use_celery)也是y。
+
+默认情况下，可以通过Flower服务可以在本地和生产环境中（在docker组件配置中分别是local.yml和production.yml）使用。为了提高安全性，flower要求客户端要提供与.envs/.local/.django and .envs/.production/.django CELERY_FLOWER_USER and CELERY_FLOWER_PASSWORD相对应的账号和密码认证。配置后，进入localhost:5555可以查看使用celery。
+
+### Developing locally with HTTPS
+
+为了创建一个安全的环境，我们需要在docker应用中安装一个可信任的SSL认证。
+
+1、Let’s Encrypt
+
+Let's Encrypt是一个数字证书认证机构，旨在以自动化流程消除手动创建和安装证书的复杂流程，并推广使万维网服务器的加密连接无所不在，为安全网站提供免费的SSL/TLS证书。
+详见：https://letsencrypt.org/docs/certificates-for-localhost/
+
+2、mkcert: Valid Https Certificates For Localhost
+
+mkcert：为 localhost 生成可被浏览器信任的证书，详见：https://blog.filippo.io/mkcert-valid-https-certificates-for-localhost/
+
+在安装完TLS证书后，需要配置docker。
