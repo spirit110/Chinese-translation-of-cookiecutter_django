@@ -391,4 +391,62 @@ Let's Encrypt是一个数字证书认证机构，旨在以自动化流程消除�
 
 mkcert：为 localhost 生成可被浏览器信任的证书，详见：https://blog.filippo.io/mkcert-valid-https-certificates-for-localhost/
 
-在安装完TLS证书后，需要配置docker。
+在安装完TLS证书后，需要配置docker。然后需要安装nginx反向代理服务器。这样可以确保不会影响到我们配置适用于生产环境的边缘路由网关traefik。
+
+#### certs
+
+将你获取的证书放置到项目根目录下的certs文件（如果没有则新建）。
+假设你把你的主机名注册为my-dev-env.local，那么你放入certs文件的证书应该命名为my-dev-env.local.crt和my-dev-env.local.key。
+
+#### 关于local.yml的配置：
+1、添加nginx-proxy服务配置
+```yml
+
+    nginx-proxy:
+      image: jwilder/nginx-proxy:alpine
+      container_name: nginx-proxy
+      ports:
+        - "80:80"
+        - "443:443"
+      volumes:
+        - /var/run/docker.sock:/tmp/docker.sock:ro
+        - ./certs:/etc/nginx/certs
+      restart: always
+      depends_on:
+        - django
+```
+2、通过环境变量的配置将nginx-proxy链接到django.
+如果你是团队协作开发，且需要保存本地环境，那么你需要执行以下命令实现将nginx-proxy链接到django.
+
+```python
+# HTTPS---------------------------------------
+VIRTUAL_HOST=my-dev-env.local
+VIRTUAL_PORT=8000
+```
+这个服务是在反向代理之后运行的。
+
+#### 关于config/settings/local.py的配置
+
+在设置中加入：
+
+```python
+ALLOWED_HOSTS = ["localhost", "0.0.0.0", "127.0.0.1", "my-dev-env.local"]
+```
+
+重建docker应用
+
+```
+$ docker-compose -f local.yml up -d --build
+```
+重启后，到 https://my-dev-env.local 查看更多
+
+到这个链接查看更多关于nginx的配置 https://codewithhugo.com/docker-compose-local-https/
+
+
+#### 关于.gitignore的配置
+
+将certs/*加入到.gitignore文件中。这个设置可以使得目录中包含certs文件，但是git更新的时候会忽略掉certs中的文件内容。这个设置一般在本地开发的时候才会用上。不要将这个设置用到生产中，因为有可能会暴露本地通用根证书rootCA-key.pem.
+
+### Settings
+
+下图是cookiecutter_django中的环境变量与django变量的对应关系图
